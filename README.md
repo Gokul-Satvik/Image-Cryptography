@@ -1,30 +1,130 @@
-# Image-Cryptography
-Image Encryption and Decryption Using Python (AES Algorithm)
-This project implements a robust image encryption and decryption system using Python and the Advanced Encryption Standard (AES) algorithm. It focuses on securing digital images to ensure confidentiality and protection from unauthorized access during transmission and storage.
+# Image Cryptography Based on Rubix's Cube Principle
 
- 🔒 Key Features
-- Implements AES encryption and decryption for image security.
-- Supports multiple image formats (JPEG, PNG, BMP).
-- Protects sensitive images from unauthorized access and tampering.
-- User-friendly interface for seamless encryption and decryption processes.
-- Efficient performance with minimal computational overhead.
+Implementation of image encryption and decryption using Rubix's Cube Principle. This algorithm is based on the paper ["A Secure Image Encryption Algorithm Based on Rubik's Cube Principle"](https://www.hindawi.com/journals/jece/2012/173931/) by Khaled Loukhaoukha, Jean-Yves Chouinard and Abdellah Berdai.
 
- 🎯 Objectives
-- Develop robust encryption algorithms to transform image data into unreadable formats.
-- Implement decryption mechanisms to recover the original image without data loss.
-- Ensure high-security standards suitable for applications like medical imaging, military data, and multimedia systems.
+## Algorithm Overview
 
- 💻 Technologies Used
-- Python 3
-- Cryptography Libraries (AES encryption)
-- NumPy, Pillow (Image Processing)
+Given an input image having the three R,G,B matrices of size `M X N`
+Hyperparameters include 
+`α` - used for vector creation
+`ITER_MAX` - maximum number of times to carry out operations
 
- ✅ How It Works
-1. Select an image for encryption.
-2. Encrypt the image using AES and generate a secure cipher.
-3. Decrypt the cipher to restore the original image using the same key.
+#### A. Encyption
+1. Create two vectors `Kr` and `Kc` with `|Kr|=M` & `|Kc|=N`. The values of these vectors are randomly picked from 0 to 2<sup>α </sup>-1
+2. Repeat below steps `ITER_MAX` number of times
 
- 📈 Applications
-- Secure communication systems
-- Medical and military imaging
-- Multimedia security solutions
+    i. **Rolling Rows:** 
+        
+      * The sum of all pixel values of every row of the image RGB matrices are calculated one by one. 
+        
+      * If the sum of a given row `rowNumber` is even, Roll the row to the right `Kr[rowNumber]` times 
+        Otherwise roll to the left `Kr[rowNumber]` times.
+
+    ii. **Rolling Columns:**
+    
+      * The sum of all pixel values of every column of the image RGB matrices are calculated one by one. 
+        
+      * If the sum of a given row `columnNumber` is even, roll the column up `Kc[columnNumber]` times.
+        Otherwise roll the column down `Kc[columnNumber]` times.
+
+    iii. **XORing Pixels:**
+    
+      * For every pixel(i,j), XOR the pixel with the below two values
+        
+         - Value #1 - `Kc[columnNumber]` if `i` is odd else 180 rotated bit version of `Kc[columnNumber]`
+        
+         - Value #2 - `Kr[rowNumber]` if `j` is even else 180 rotated bit version of `Kr[rowNumber]`
+
+
+#### B. Decryption
+  Given an encrypted image, vectors `Kr` and `Kc` & `ITER_MAX` , decryption can be done by following the reverse procedure - XORing pixels → Rolling Columns → Rolling Rows `ITER_MAX` number of times
+
+## Prerequisites
+
+- Python3 ( https://www.python.org/downloads/ )
+
+- rubikencryptor package - Run `pip3 install rubikencryptor`
+
+## Running 
+
+
+1. Using the crypto_client.py script supplying neccessary parameters
+```
+$ python3 crypto_client.py -h
+usage: crypto_client.py [-h] [--type TYPE] [--image IMAGE] 
+      [--alpha ALPHA] [--iter_max ITER_MAX] 
+      [--key KEY] [--output_image OUTPUT_IMAGE]
+```
+
+2. Using rubikencryptor python package
+```
+from rubikencryptor.rubikencryptor import RubikCubeCrypto
+from PIL import Image
+
+# Encrypt image
+input_image = Image.open('image1.png')
+encryptor = RubikCubeCrypto(input_image)
+encrypted_image = encryptor.encrypt(alpha=8, iter_max=10, key_filename='key.txt')
+encrypted_image.save('encrypted_image.png')
+
+# Decrypt image
+decryptor = RubikCubeCrypto(encrypted_image)
+decrypted_image = decryptor.decrypt(key_filename='key.txt')
+decrypted_image.save('decrypted_image.png')
+```
+
+## Example
+
+Original Image -
+
+![](https://github.com/dannyi96/Image-Cryptography/blob/master/example/original.png)
+
+Run Encryption on the Original Image
+```
+$ python3 crypto_client.py --type encrypt
+    --image example/original.png 
+    --output_image example/encrypted.png 
+    --key example/encoded_key.txt 
+    --alpha 8 --iter_max 10
+```
+
+encrypted image is stored at `example/encrypted.png` & key is stored at `example/encoded_key.txt `
+
+Encrypted Image -
+
+![](https://github.com/dannyi96/Image-Cryptography/blob/master/example/encrypted.png)
+
+Run Decryption on the Encryped Image using the Key
+
+```
+$ python3 crypto_client.py --type decrypt  
+    --image example/encrypted.png 
+    --output_image example/decrypted.png 
+    --key example/encoded_key.txt
+```
+
+decrypted image is stored at `example/decrypted.png` 
+
+Decrypted Image -
+
+![](https://github.com/dannyi96/Image-Cryptography/blob/master/example/decrypted.png)
+
+## Demo using a Web App ( Early beta version )
+
+Note - this is still in early beta version. Performance enhancements, bug fixes & improved styling are expected.
+
+App hosted at https://dannyi96.github.io/Image-Cryptography/
+
+https://github.com/dannyi96/Image-Cryptography/assets/15380498/da99a862-fa52-46eb-9ff2-306e8d504da0
+
+## Future of project
+
+Refer the proposed [Roadmap](https://github.com/users/dannyi96/projects/3/views/2)
+
+Main goals include
+- Improving the Web App demonstrating this package
+- Measuring the current performance of the package ( encryption & decryption )
+- Improving the performance of the package ( encryption & decryption )
+- Improving Quality via Testcases, Linters, CICD pipeline
+- (Stretch goal) Including technical aspects of the research paper as to why the algo is resistant to various attacks as part of the WebApp
+
